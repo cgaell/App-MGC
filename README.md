@@ -11,7 +11,7 @@ Qué onda, este es el repo de mi proyecto de DevOps. Es una web app que mezcla *
 ### 📂 Estructura rápida
 * `/src`: Todo el código visual de React.
 * `/server`: Mi servidor de Node.
-* `/server/logs`: Donde se guardan los archivos .log que pidió el profe.
+* `/server/logs`: Donde se guardan los archivos .log
 
 ---
 
