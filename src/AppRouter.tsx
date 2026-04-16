@@ -73,7 +73,7 @@ type ReservationFormFieldName = keyof ReservationFormData;
 
 const appRoutes: AppRoute[] = ['/', '/servicios', '/coberturas', '/proceso', '/contacto'];
 
-const reservationsApiBaseUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
+const reservationsApiBaseUrl = (import.meta.env.VITE_API_URL ?? 'http://54.226.0.92:3000').replace(/\/+$/, '');
 
 const reservationServiceOptions = [
   { value: 'asesoria-ecommerce', label: 'Asesoría de ecommerce' },
