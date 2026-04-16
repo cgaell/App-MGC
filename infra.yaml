@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Infraestructura para la aplicacion
+
+Resources:
+  # 1. Creacion del Bucket de S3 para Backups
+  MillenniumBackupsBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub 'millennium-global-backups-${AWS::AccountId}'
+      VersioningConfiguration:
+        Status: Enabled
+
+  # 2. Security Group para la Aplicacion
+  # Puertos: 22 (SSH), 5173 (Frontend), 3000 (Backend), 8080 (Extra)
+  MillenniumAppSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Permitir acceso a Millennium Global App
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5173
+          ToPort: 5173
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+
+  # 3. Instancia EC2
+  MillenniumServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-098e39bafa7e7303d
+      SecurityGroupIds:
+        - !Ref MillenniumAppSG
+      Tags:
+        - Key: Name
+          Value: MillenniumGlobal-Server
+
+Outputs:
+  BucketName:
+    Description: Nombre del bucket creado
+    Value: !Ref MillenniumBackupsBucket
+  InstancePublicIP:
+    Description: IP Publica de la instancia
+    Value: !GetAtt MillenniumServer.PublicIp
