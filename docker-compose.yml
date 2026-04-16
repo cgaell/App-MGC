@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # CONTENEDOR DE BASE DE DATOS
+  mongodb:
+    image: mongo:latest
+    container_name: mgc_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mgc_data:/data/db # Para que tus datos no se borren al apagar docker
+
+  # CONTENEDOR DEL BACKEND
+  backend:
+    build: ./server
+    container_name: mgc_backend
+    ports:
+      - "3000:3000"
+    environment:
+      # AQUÍ ESTÁ EL CAMBIO: Usamos el nombre del servicio 'mongodb' en la URL
+      - MONGO_URI=mongodb://mongodb:27017/MillenniumDB
+    depends_on:
+      - mongodb
+
+  # CONTENEDOR DEL FRONTEND
+  frontend:
+    build: .
+    container_name: mgc_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mgc_data: # Definimos el volumen para la DB

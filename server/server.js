@@ -10,6 +10,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+app.get('/', (req, res) => {
+    res.send('Millennium Global API - Backend Corriendo con Docker');
+});
 const logDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 
