@@ -1,4 +1,11 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 
 type AppRoute = '/' | '/servicios' | '/coberturas' | '/proceso' | '/contacto';
 
@@ -52,7 +59,40 @@ type RouteViewProps = {
   navigate: NavigateFn;
 };
 
+type ReservationFormData = {
+  nombre: string;
+  email: string;
+  telefono: string;
+  servicio: string;
+  fecha: string;
+  hora: string;
+  mensaje: string;
+};
+
+type ReservationFormFieldName = keyof ReservationFormData;
+
 const appRoutes: AppRoute[] = ['/', '/servicios', '/coberturas', '/proceso', '/contacto'];
+
+const reservationsApiBaseUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
+
+const reservationServiceOptions = [
+  { value: 'asesoria-ecommerce', label: 'Asesoría de ecommerce' },
+  { value: 'asesoria-seguros-medicos', label: 'Asesoría de seguros médicos' },
+  { value: 'asesoria-seguros-auto', label: 'Asesoría de seguros de auto' },
+  { value: 'asesoria-seguros-vida', label: 'Asesoría de seguros de vida' },
+  { value: 'asesoria-integral', label: 'Asesoría integral (ecommerce y seguros)' },
+  { value: 'otra-reserva', label: 'Otra asesoría' },
+] as const;
+
+const defaultReservationFormData: ReservationFormData = {
+  nombre: '',
+  email: '',
+  telefono: '',
+  servicio: '',
+  fecha: '',
+  hora: '',
+  mensaje: '',
+};
 
 const routeTitles: Record<AppRoute, string> = {
   '/': 'Inicio | Millennium Global Corporativo',
@@ -561,63 +601,237 @@ function ProcessView({ currentRoute, navigate }: RouteViewProps) {
 }
 
 function ContactView({ currentRoute, navigate }: RouteViewProps) {
+  const [reservationFormData, setReservationFormData] = useState<ReservationFormData>(
+    defaultReservationFormData,
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
+  const today = new Date();
+  const minReservationDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const handleFieldChange = (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    const fieldName = event.target.name as ReservationFormFieldName;
+
+    setReservationFormData((previousFormData) => ({
+      ...previousFormData,
+      [fieldName]: event.target.value,
+    }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSubmitError('');
+    setSubmitSuccess('');
+
+    try {
+      const response = await fetch(`${reservationsApiBaseUrl}/api/reservas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationFormData),
+      });
+
+      const responseBody = (await response.json().catch(() => null)) as
+        | { error?: string; message?: string }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(responseBody?.error ?? 'No se pudo enviar la reserva. Intenta nuevamente.');
+      }
+
+      setReservationFormData(defaultReservationFormData);
+      setSubmitSuccess(responseBody?.message ?? 'Tu reserva fue enviada correctamente.');
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : 'No se pudo enviar la reserva. Intenta nuevamente.',
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <>
       <PageHero
-        kicker="Contacto"
-        title="Diseñamos la propuesta para tu operación comercial o de protección."
-        lead="Cuéntanos si tu necesidad está en ecommerce, seguros o ambos, y te devolvemos una propuesta clara para avanzar."
-        highlights={['Respuesta humana', 'Cotización', 'Seguimiento']}
+        kicker="Reservas"
+        title="Reserva tu asesoría para ecommerce o seguros en una sola agenda."
+        lead="Elige tipo de asesoría, fecha y hora preferida. Nuestro equipo confirma la reserva y te acompaña en el siguiente paso."
+        highlights={['Agenda tu cita', 'Confirmación rápida', 'Asesoría personalizada']}
         primaryAction={{ to: '/servicios', label: 'Ver servicios' }}
         secondaryAction={{ to: '/proceso', label: 'Ver proceso' }}
         navigate={navigate}
       >
         <article className="lux-visual-card lux-visual-card--feature">
-          <p className="lux-visual-card__eyebrow">05 / Conversación</p>
-          <h2>Un solo punto de entrada.</h2>
+          <p className="lux-visual-card__eyebrow">05 / Reserva</p>
+          <h2>Agenda tu asesoría en minutos.</h2>
           <p>
-            Te ayudamos a ordenar la necesidad y a convertirla en una propuesta ejecutable.
+            Selecciona disponibilidad y tipo de consulta para preparar una sesión enfocada en tu
+            necesidad.
           </p>
         </article>
 
         <div className="lux-visual-stack">
           <article className="lux-visual-card">
-            <span>Atención</span>
-            <strong>Asesoría</strong>
-            <p>Nos enfocamos en entender tu operación primero.</p>
+            <span>Agenda</span>
+            <strong>Fecha y hora</strong>
+            <p>Propones horario y confirmamos disponibilidad.</p>
           </article>
           <article className="lux-visual-card">
-            <span>Entrega</span>
-            <strong>Propuesta</strong>
-            <p>Definimos el siguiente paso con claridad y seguimiento.</p>
+            <span>Sesión</span>
+            <strong>Asesoría</strong>
+            <p>Entramos directo a resolver tu caso de ecommerce o seguros.</p>
           </article>
         </div>
       </PageHero>
 
       <section className="lux-contact" id="contacto" aria-labelledby="contacto-title">
         <div className="lux-contact__copy">
-          <p className="lux-section__label">Contacto</p>
-          <h2 id="contacto-title">Cuéntanos qué necesitas y lo bajamos a una propuesta.</h2>
+          <p className="lux-section__label">Reservaciones</p>
+          <h2 id="contacto-title">Reserva tu asesoría y aparta tu horario.</h2>
           <p>
-            Podemos empezar por ecommerce, por seguros o por ambos frentes si quieres unificar la
-            operación.
+            Indica el tipo de asesoría, una fecha y hora preferida. Te confirmaremos la cita para
+            iniciar.
           </p>
+
+          <div className="lux-contact__actions">
+            <RouteButtonLink
+              to="/servicios"
+              label="Ver servicios"
+              className="lux-button lux-button--solid"
+              navigate={navigate}
+            />
+            <RouteButtonLink
+              to="/"
+              label="Volver al inicio"
+              className="lux-button lux-button--outline"
+              navigate={navigate}
+            />
+          </div>
         </div>
 
-        <div className="lux-contact__actions">
-          <RouteButtonLink
-            to="/servicios"
-            label="Ver servicios"
-            className="lux-button lux-button--solid"
-            navigate={navigate}
-          />
-          <RouteButtonLink
-            to="/"
-            label="Volver al inicio"
-            className="lux-button lux-button--outline"
-            navigate={navigate}
-          />
-        </div>
+        <form className="lux-contact-form" onSubmit={handleSubmit} noValidate>
+          <div className="lux-contact-form__grid">
+            <label className="lux-contact-form__field" htmlFor="reservation-nombre">
+              <span>Nombre completo *</span>
+              <input
+                id="reservation-nombre"
+                name="nombre"
+                type="text"
+                autoComplete="name"
+                minLength={2}
+                maxLength={80}
+                required
+                value={reservationFormData.nombre}
+                onChange={handleFieldChange}
+              />
+            </label>
+
+            <label className="lux-contact-form__field" htmlFor="reservation-email">
+              <span>Correo electrónico *</span>
+              <input
+                id="reservation-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                maxLength={120}
+                required
+                value={reservationFormData.email}
+                onChange={handleFieldChange}
+              />
+            </label>
+
+            <label className="lux-contact-form__field" htmlFor="reservation-telefono">
+              <span>Teléfono</span>
+              <input
+                id="reservation-telefono"
+                name="telefono"
+                type="tel"
+                autoComplete="tel"
+                maxLength={30}
+                value={reservationFormData.telefono}
+                onChange={handleFieldChange}
+              />
+            </label>
+
+            <label className="lux-contact-form__field" htmlFor="reservation-servicio">
+              <span>Tipo de asesoría *</span>
+              <select
+                id="reservation-servicio"
+                name="servicio"
+                required
+                value={reservationFormData.servicio}
+                onChange={handleFieldChange}
+              >
+                <option value="">Selecciona una asesoría</option>
+                {reservationServiceOptions.map((serviceType) => (
+                  <option key={serviceType.value} value={serviceType.value}>
+                    {serviceType.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="lux-contact-form__field" htmlFor="reservation-fecha">
+              <span>Fecha de reserva *</span>
+              <input
+                id="reservation-fecha"
+                name="fecha"
+                type="date"
+                min={minReservationDate}
+                required
+                value={reservationFormData.fecha}
+                onChange={handleFieldChange}
+              />
+            </label>
+
+            <label className="lux-contact-form__field" htmlFor="reservation-hora">
+              <span>Hora de reserva *</span>
+              <input
+                id="reservation-hora"
+                name="hora"
+                type="time"
+                required
+                value={reservationFormData.hora}
+                onChange={handleFieldChange}
+              />
+            </label>
+          </div>
+
+          <label className="lux-contact-form__field lux-contact-form__field--full" htmlFor="reservation-mensaje">
+            <span>Cuéntanos qué necesitas *</span>
+            <textarea
+              id="reservation-mensaje"
+              name="mensaje"
+              rows={5}
+              minLength={10}
+              maxLength={1200}
+              required
+              value={reservationFormData.mensaje}
+              onChange={handleFieldChange}
+            />
+          </label>
+
+          <div className="lux-contact-form__footer">
+            <p
+              className={`lux-contact-form__status${submitError ? ' lux-contact-form__status--error' : ''}${submitSuccess ? ' lux-contact-form__status--success' : ''}`}
+              role="status"
+              aria-live="polite"
+            >
+              {submitError ||
+                submitSuccess ||
+                'Comparte tu disponibilidad y confirmaremos tu reserva en menos de 24 horas.'}
+            </p>
+
+            <button className="lux-button lux-button--solid" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Reservando...' : 'Reservar asesoría'}
+            </button>
+          </div>
+        </form>
       </section>
 
       <RouteOverviewSection

@@ -10,10 +10,144 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const reservationServices = [
+    'asesoria-ecommerce',
+    'asesoria-seguros-medicos',
+    'asesoria-seguros-auto',
+    'asesoria-seguros-vida',
+    'asesoria-integral',
+    'otra-reserva',
+];
+
+const reservationSchema = new mongoose.Schema(
+    {
+        nombre: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 2,
+            maxlength: 80,
+        },
+        email: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            maxlength: 120,
+        },
+        telefono: {
+            type: String,
+            trim: true,
+            maxlength: 30,
+            default: '',
+        },
+        servicio: {
+            type: String,
+            required: true,
+            trim: true,
+            enum: reservationServices,
+        },
+        fecha: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        hora: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        mensaje: {
+            type: String,
+            required: true,
+            trim: true,
+            minlength: 10,
+            maxlength: 1200,
+        },
+    },
+    { timestamps: true }
+);
+
+const Reservation = mongoose.models.Reservation || mongoose.model('Reservation', reservationSchema);
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 app.get('/', (req, res) => {
     res.send('Millennium Global API - Backend Corriendo con Docker');
 });
+
+app.post('/api/reservas', async (req, res) => {
+    try {
+        const {
+            nombre,
+            email,
+            telefono = '',
+            servicio,
+            fecha,
+            hora,
+            mensaje,
+        } = req.body ?? {};
+
+        const normalizedNombre = typeof nombre === 'string' ? nombre.trim() : '';
+        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        const normalizedTelefono = typeof telefono === 'string' ? telefono.trim() : '';
+        const normalizedServicio = typeof servicio === 'string' ? servicio.trim() : '';
+        const normalizedFecha = typeof fecha === 'string' ? fecha.trim() : '';
+        const normalizedHora = typeof hora === 'string' ? hora.trim() : '';
+        const normalizedMensaje = typeof mensaje === 'string' ? mensaje.trim() : '';
+
+        if (!normalizedNombre || !normalizedEmail || !normalizedServicio || !normalizedFecha || !normalizedHora || !normalizedMensaje) {
+            return res.status(400).json({ error: 'Todos los campos obligatorios deben ser completados.' });
+        }
+
+        if (!emailPattern.test(normalizedEmail)) {
+            return res.status(400).json({ error: 'El correo electrónico no tiene un formato válido.' });
+        }
+
+        if (!reservationServices.includes(normalizedServicio)) {
+            return res.status(400).json({ error: 'El tipo de asesoría seleccionado no es válido.' });
+        }
+
+        if (!datePattern.test(normalizedFecha)) {
+            return res.status(400).json({ error: 'La fecha de reserva no tiene un formato válido.' });
+        }
+
+        if (!timePattern.test(normalizedHora)) {
+            return res.status(400).json({ error: 'La hora de reserva no tiene un formato válido.' });
+        }
+
+        const parsedDate = new Date(`${normalizedFecha}T00:00:00`);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (Number.isNaN(parsedDate.getTime()) || parsedDate < today) {
+            return res.status(400).json({ error: 'La fecha de reserva debe ser hoy o una fecha futura.' });
+        }
+
+        const reservation = await Reservation.create({
+            nombre: normalizedNombre,
+            email: normalizedEmail,
+            telefono: normalizedTelefono,
+            servicio: normalizedServicio,
+            fecha: normalizedFecha,
+            hora: normalizedHora,
+            mensaje: normalizedMensaje,
+        });
+
+        writeLog(`Reserva registrada con ID ${reservation._id}`);
+
+        return res.status(201).json({
+            message: 'Tu reserva fue enviada correctamente.',
+            id: reservation._id,
+        });
+    } catch (error) {
+        writeLog(`Error al guardar reserva: ${error.message}`, 'ERROR');
+        return res.status(500).json({ error: 'No se pudo guardar la reserva. Intenta nuevamente.' });
+    }
+});
+
 const logDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logDir)) fs.mkdirSync(logDir);
 

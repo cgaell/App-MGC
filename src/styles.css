@@ -1274,3 +1274,129 @@ body {
 .lux-process__step {
   border-top-color: var(--line);
 }
+
+.lux-contact {
+  align-items: start;
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: 1.4rem;
+}
+
+.lux-contact__copy {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.lux-contact__actions {
+  margin-top: 0.6rem;
+  justify-content: flex-start;
+}
+
+.lux-contact-form {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 20px 48px rgba(17, 19, 26, 0.08);
+}
+
+.lux-contact-form__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.lux-contact-form__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.lux-contact-form__field span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.64rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.lux-contact-form__field input,
+.lux-contact-form__field select,
+.lux-contact-form__field textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: #11131a;
+  padding: 0.72rem 0.8rem;
+  font-size: 0.95rem;
+  border-radius: 0;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.lux-contact-form__field textarea {
+  resize: vertical;
+  min-height: 7rem;
+}
+
+.lux-contact-form__field input:focus,
+.lux-contact-form__field select:focus,
+.lux-contact-form__field textarea:focus {
+  outline: none;
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.lux-contact-form__field--full {
+  grid-column: 1 / -1;
+}
+
+.lux-contact-form__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.lux-contact-form__status {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+
+.lux-contact-form__status--error {
+  color: #a11f30;
+}
+
+.lux-contact-form__status--success {
+  color: #1d7c3b;
+}
+
+.lux-contact-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+@media (max-width: 960px) {
+  .lux-contact {
+    grid-template-columns: 1fr;
+  }
+
+  .lux-contact-form__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .lux-contact-form {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .lux-contact-form__footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
