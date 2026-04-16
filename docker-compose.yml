@@ -28,6 +28,7 @@ services:
     container_name: mgc_frontend
     ports:
       - "5173:5173"
+    command: npm run dev -- --host 0.0.0.0   
     depends_on:
       - backend
 

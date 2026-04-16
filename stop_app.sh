@@ -1,4 +1,4 @@
 echo "Deteniendo aplicación"
-docker compose stop
+docker-compose stop
 
 echo "Servicios detenidos"

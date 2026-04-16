@@ -2,7 +2,7 @@
 
 echo "Iniciando aplicacion"
 
-docker compose start
+docker-compose start
 
 echo "Servicios encendidos"
 
